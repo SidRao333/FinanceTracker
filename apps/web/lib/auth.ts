@@ -1,16 +1,17 @@
 "use server"
 
 
-import { FormState, SignupFormSchema } from "./type";
+import { FormState, LoginFormSchema, SignupFormSchema } from "./type";
 import { BACKEND_URL } from "./constant";
 import { redirect } from "next/navigation";
+import { createSession } from "./session";
 
 
 export async function signUp(
-    state:FormState,
-    formData:FormData
+    state: FormState,
+    formData: FormData
 ): Promise<FormState> {
-    const validationFields =  SignupFormSchema.safeParse({
+    const validationFields = SignupFormSchema.safeParse({
         name: formData.get("name"),
         email: formData.get("email"),
         password: formData.get("password"),
@@ -29,14 +30,55 @@ export async function signUp(
         },
         body: JSON.stringify(validationFields.data),
     });
-    if(response.ok) {
+    if (response.ok) {
         redirect('/auth/signin');
     }
     else
         return {
             message:
-            response.status === 409
-            ? "User with this email already exists."
-            : response.statusText,
+                response.status === 409
+                    ? "User with this email already exists."
+                    : response.statusText,
+        };
+}
+
+
+export async function signIn(state: FormState, formData: FormData): Promise<FormState> {
+
+
+    const validatedFields = LoginFormSchema.safeParse({
+        email: formData.get("email"),
+        password: formData.get("password"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            error: validatedFields.error.flatten().fieldErrors,
         };
     }
+
+    const response = await fetch(`${BACKEND_URL}/auth/signin`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validatedFields.data),
+    });
+
+    if (response.ok) {
+        const result = await response.json();
+        await createSession({
+            user:{
+                id: result.id,
+                name: result.name,
+            },
+            accessToken: result.accessToken,
+        });
+        redirect('/');
+    }
+    else {
+        return {
+            message: response.status === 401 ? "Invalid email or password." : response.statusText,
+        };
+    }
+}
