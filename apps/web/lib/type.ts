@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-export  type FormState = | {
-    error?: {
-        name?:string[];
-        email?:string[];
-        password?:string[];
-    };
-    message?: string;
+export type FormState = | {
+  error?: {
+    name?: string[];
+    email?: string[];
+    password?: string[];
+  };
+  message?: string;
 } | undefined;
 
 export const SignupFormSchema = z.object({
@@ -33,4 +33,11 @@ export const SignupFormSchema = z.object({
       message: "Contain at least one special character.",
     })
     .trim(),
+});
+
+export const LoginFormSchema = z.object({
+  email: z.string()
+    .email({ message: "Please enter a valid email." }),
+  password: z.string()
+    .min(1, { message: "Password must not be empty." })
 });
