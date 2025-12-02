@@ -7,12 +7,18 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import refreshConfig from './config/refresh.config';
+import { RefreshStrategy } from './strategies/refresh-token.strategy';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
 
 @Module({
   imports: [JwtModule.registerAsync(jwtConfig.asProvider()),
-    ConfigModule.forFeature(jwtConfig),
+  ConfigModule.forFeature(jwtConfig),
+  ConfigModule.forFeature(refreshConfig),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, PrismaService,LocalStrategy],
+  providers: [AuthService, UserService, PrismaService, LocalStrategy, JwtStrategy, RefreshStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
-export class AuthModule {}
+export class AuthModule { }

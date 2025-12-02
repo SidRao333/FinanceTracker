@@ -1,17 +1,18 @@
 import { Strategy } from "passport-local";
 import { PassportStrategy } from "@nestjs/passport";
 import { AuthService } from "../auth.service";
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-    constructor(private readonly authService: AuthService){
+    constructor(private readonly authService: AuthService) {
         super({
             usernameField: 'email',
         });
     }
 
-    validate(email:string, password:string){
+    validate(email: string, password: string) {
+        if (password === "") throw new UnauthorizedException("Password cannot be empty");
         return this.authService.validateLocalUser(email, password);
     }
 }
